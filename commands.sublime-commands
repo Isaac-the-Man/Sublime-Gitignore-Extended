@@ -1,0 +1,6 @@
+[
+	{
+		"caption": "Gitignore: Compose .gitignore",
+		"command": "compose_gitignore"
+	}
+]
