@@ -12,12 +12,10 @@ from glob import iglob
 import os
 
 
-def loadTemplates():
+def load_default_templates():
 	'''
-	Returns a list of templates
+	Read .gitignores from the github repo
 	'''
-	# read settings
-	settings = sublime.load_settings('gitignore_extended.sublime-settings')
 	# intialize lists
 	ignores_name = []
 	ignores_path = []
@@ -36,6 +34,18 @@ def loadTemplates():
 			name = '{} ({})'.format(name, ' | '.join(tag))
 		ignores_name.append(name)
 		ignores_path.append(fname)
+	return ignores_name, ignores_path
+
+
+def load_custom_templates():
+	'''
+	Read custom .gitignores templates
+	'''
+	# read settings
+	settings = sublime.load_settings('gitignore_extended.sublime-settings')
+	# intialize lists
+	ignores_name = []
+	ignores_path = []
 	# read custom templates
 	custom_path = os.path.join(sublime.packages_path(), 'User',
 			settings.get('custom_template_path', 'CustomGitignoreTemplates'))
@@ -44,6 +54,24 @@ def loadTemplates():
 		name = '{} (custom)'.format(os.path.splitext(os.path.basename(fname))[0])
 		ignores_name.append(name)
 		ignores_path.append(fname)
+	return ignores_name, ignores_path
+
+
+def load_templates():
+	'''
+	Returns a list of templates
+	'''
+	# intialize lists
+	ignores_name = []
+	ignores_path = []
+	# load and merge default/custom templates
+	names, paths = load_default_templates()
+	ignores_name.extend(names)
+	ignores_path.extend(paths)
+	names, paths = load_custom_templates()
+	ignores_name.extend(names)
+	ignores_path.extend(paths)
+
 	return ignores_name, ignores_path
 
 
@@ -68,7 +96,7 @@ class ComposeGitignoreCommand(sublime_plugin.WindowCommand):
 		'''
 		super().__init__(*args, **kwargs)
 		# load templates
-		self.ignores_name, self.ignores_path = loadTemplates()
+		self.ignores_name, self.ignores_path = load_templates()
 		self.ignores_name.insert(0, 'done')
 
 
@@ -76,7 +104,12 @@ class ComposeGitignoreCommand(sublime_plugin.WindowCommand):
 		'''
 		Start selection
 		'''
+		# load templates
+		self.ignores_name, self.ignores_path = load_templates()
+		self.ignores_name.insert(0, 'done')
+		# clear previous session
 		self.compositions.clear()
+		# select panel
 		self._select()
 
 
@@ -97,8 +130,7 @@ class ComposeGitignoreCommand(sublime_plugin.WindowCommand):
 			# next selection
 			self.window.show_quick_panel(
 				self.ignores_name,
-				on_select=self._select,
-				selected_index=0)
+				on_select=self._select)
 
 
 	def _read_file(self, path):
@@ -129,23 +161,119 @@ class ComposeGitignoreCommand(sublime_plugin.WindowCommand):
 		view.run_command('save_gitignore', {'content': buffer})
 
 
-# class MakeGitignoreTemplate(sublime_plugin.WindowCommand):
-# 	'''
-# 	Save a new .gitignore template
-# 	'''
-# 	def __init__(self, *args, **kwargs):
-# 		super().__init__(*args, **kwargs)
-# 		self.settings = sublime.load_settings('gitignore_extended.sublime-settings')
-# 		# check for custom template folder
-# 		if self.settings.get('custom_template_path', 'CustomGitignoreTemplates'):
+class NewCustomGitignoreTemplateCommand(sublime_plugin.WindowCommand):
+	'''
+	Create a new custom .gitignore template
+	'''
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.settings = sublime.load_settings('gitignore_extended.sublime-settings')
+		# check for custom template folder
+		self.custom_path = os.path.join(sublime.packages_path(), 'User',
+				self.settings.get('custom_template_path', 'CustomGitignoreTemplates'))
 
 
-# 	def run(self):
-# 		pass
+	def run(self):
+		self.window.show_input_panel('File Name: ', 'my_template', 
+				self._new_template, None, None)
 
 
-# 	def _new_template(self):
-# 		# create empty file
-# 		view = self.window.new_file()
-# 		view.set_name('.gitignore')
-# 		view.assign_syntax(sublime.find_syntax_by_name('Git Ignore')[0])	# assigning a Syntax object here since setting syntax name in View.new_file() seems to raise an error.
+	def _new_template(self, name):
+		# create empty file
+		filename = '{}.gitignore'.format(name)
+		with open(os.path.join(self.custom_path, filename), 'w') as f:
+			f.write('# custom .gitignore template #')			
+		view = self.window.open_file(os.path.join(self.custom_path, filename))
+
+
+class EditCustomGitignoreTemplateCommand(sublime_plugin.WindowCommand):
+	'''
+	Create a new custom .gitignore template
+	'''
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.settings = sublime.load_settings('gitignore_extended.sublime-settings')
+		# check for custom template folder
+		self.custom_path = os.path.join(sublime.packages_path(), 'User',
+				self.settings.get('custom_template_path', 'CustomGitignoreTemplates'))
+		# load custom templates
+		self.ignores_name, self.ignores_path = load_custom_templates()
+
+
+	def run(self):
+		'''
+		Start selection
+		'''
+		# load custom templates
+		self.ignores_name, self.ignores_path = load_custom_templates()
+		# select file
+		self.window.show_quick_panel(self.ignores_name, 
+				on_select=self._select,
+				on_highlight=self._preview)
+
+
+	def _select(self, idx):
+		'''
+		Open selected template
+		'''
+		if idx == -1:
+			# close preview and dismiss
+			view = self.window.active_view()
+			if self.window.get_view_index(view)[1] == -1:
+				view.close()
+			return
+		# open file as tab
+		self.window.open_file(self.ignores_path[idx])
+
+
+	def _preview(self, idx):
+		'''
+		Preview selected template
+		'''
+		self.window.open_file(self.ignores_path[idx], sublime.TRANSIENT)
+
+
+class DeleteCustomGitignoreTemplateCommand(sublime_plugin.WindowCommand):
+	'''
+	Delete a custom .gitignore template
+	'''
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.settings = sublime.load_settings('gitignore_extended.sublime-settings')
+		# check for custom template folder
+		self.custom_path = os.path.join(sublime.packages_path(), 'User',
+				self.settings.get('custom_template_path', 'CustomGitignoreTemplates'))
+		# load custom templates
+		self.ignores_name, self.ignores_path = load_custom_templates()
+
+
+	def run(self):
+		'''
+		Start selection
+		'''
+		# load custom templates
+		self.ignores_name, self.ignores_path = load_custom_templates()
+		# select file
+		self.window.show_quick_panel(self.ignores_name, 
+				on_select=self._select,
+				on_highlight=self._preview)
+
+
+	def _select(self, idx):
+		'''
+		Delete selected template
+		'''
+		if idx >= 0:
+			# remove file
+			os.remove(self.ignores_path[idx])
+		# close preview and dismiss
+		view = self.window.active_view()
+		if self.window.get_view_index(view)[1] == -1:
+			view.close()
+
+
+	def _preview(self, idx):
+		'''
+		Preview selected template
+		'''
+		self.window.open_file(self.ignores_path[idx], sublime.TRANSIENT)

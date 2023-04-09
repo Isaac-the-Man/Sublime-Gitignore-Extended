@@ -1,6 +1,18 @@
 [
 	{
-		"caption": "Gitignore: Compose .gitignore",
+		"caption": "Gitignore-Extended: Compose .gitignore",
 		"command": "compose_gitignore"
+	},
+	{
+		"caption": "Gitignore-Extended: Create custom .gitignore template",
+		"command": "new_custom_gitignore_template"
+	},
+	{
+		"caption": "Gitignore-Extended: Edit custom .gitignore template",
+		"command": "edit_custom_gitignore_template"
+	},
+	{
+		"caption": "Gitignore-Extended: Delete custom .gitignore template",
+		"command": "delete_custom_gitignore_template"
 	}
 ]
