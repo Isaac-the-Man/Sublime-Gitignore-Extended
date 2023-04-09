@@ -20,12 +20,12 @@ Compose .gitignore from default template(s):
 
 Create your own templates:
 
-![Demo create templates](./media/create_template.gif)
+![Demo create templates](./media/create.gif)
 
 Edit your own templates:
 
-![Demo create templates](./media/edit_template.gif)
+![Demo create templates](./media/edit.gif)
 
 Delete your own templates:
 
-![Demo create templates](./media/delete_template.gif)
+![Demo create templates](./media/delete.gif)
