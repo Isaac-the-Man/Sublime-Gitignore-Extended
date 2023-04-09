@@ -1,5 +1,6 @@
 {
-	// path to 
+	// path to where the default .gitignore templates are stored.
+	"default_template_path": "DefaultGitignoreTemplates",
 	// path to where the custom .gitignore templates are stored.
 	"custom_template_path": "CustomGitignoreTemplates"
 }

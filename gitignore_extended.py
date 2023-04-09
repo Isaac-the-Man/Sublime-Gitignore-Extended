@@ -16,6 +16,8 @@ def load_default_templates():
 	'''
 	Read .gitignores from the github repo
 	'''
+	# read settings
+	settings = sublime.load_settings('gitignore_extended.sublime-settings')
 	# intialize lists
 	ignores_name = []
 	ignores_path = []
@@ -26,7 +28,8 @@ def load_default_templates():
 		os.path.join('community', '*.gitignore'),
 		os.path.join('community', '**', '*.gitignore'),
 	]
-	root = os.path.join(sublime.packages_path(), 'Sublime-Gitignore-Extended', 'gitignore')
+	root = os.path.join(sublime.packages_path(), 'Sublime-Gitignore-Extended', 
+			settings.get('default_template_path', 'DefaultGitignoreTemplates'))
 	for fname in chain(*(iglob(os.path.join(root, ptrn)) for ptrn in pattern)):
 		name = os.path.splitext(os.path.basename(fname))[0]
 		tag = os.path.dirname(os.path.relpath(fname, root)).split(os.sep)
