@@ -1,0 +1,31 @@
+[
+	{
+		"caption": "Preferences",
+		"mnemonic": "n",
+		"id": "preferences",
+		"children":
+		[
+			{
+				"caption": "Package Settings",
+				"mnemonic": "P",
+				"id": "package-settings",
+				"children":
+				[
+					{
+						"caption": "Gitignore Extended",
+						"children":
+						[
+							{
+								"caption": "Settings",
+								"command": "edit_settings",
+								"args": {
+									"base_file": "${packages}/Gitignore Extended/gitignore_extended.sublime-settings"
+								}
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+]
